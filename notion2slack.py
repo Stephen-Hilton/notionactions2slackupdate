@@ -1,9 +1,11 @@
-import requests, os, json, certifi, ssl, time, datetime 
+import requests, os, json, certifi, ssl, time, datetime, logging
 from dotenv import load_dotenv
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-print('Loading variables and configs')
+logging.basicConfig(filename='./notion2slack.log', encoding='utf-8', level=logging.DEBUG)
+logging.info("Loading variables and configs")
+
 load_dotenv()
 notion_api_key = os.getenv('NOTION_API_KEY')
 slack_api_key = os.getenv('SLACK_API_KEY')
@@ -63,7 +65,6 @@ def get_actions(userid, max_items=10) -> json:
         i=0
         for action in resp.json()['results']:
             action_title = get_result(action, ['properties','Short Description','title',0,'plain_text'])
-            print(i, action_title)
 
             # wrestle with dates:
             action_duedate = get_result(action, ['properties','Due Date','date','end'])
@@ -126,17 +127,18 @@ def slack(channel_id, messages=[]):
         for message in messages:
             response = client.chat_postMessage(channel=channel_id, text=message )
     except SlackApiError as e:
-        print(f"Error publishing message: {e.response['error']}")
+        logging.error(f"Error publishing message: {e.response['error']}")
 
 
 
     
 # control:
 while True:
+    logging.info(f'\nDaily process starting: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}') 
 
     # Process once per user
-    for user in config['users']:
-        print(f"Generating { user['name'] }")
+    for user in config['users']:    
+        logging.info(f"Generating { user['name'] }")
         now = datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')
         user['actions'] = get_actions( user['notionid'], int(user['items']) )
         actions = [a for a in user['actions'] ]
@@ -149,7 +151,7 @@ while True:
     # sleep until 5am
     now = datetime.datetime.now()
     next_runtime = datetime.datetime(year=now.year, month=now.month, day=now.day, hour=5, minute=0, second=0) + datetime.timedelta(days=1)
-    seconds_to_next_run = (next_runtime - now).total_seconds()
+    seconds_to_next_run = int((next_runtime - now).total_seconds())
+    logging.info(f'Complete, sleeping until {next_runtime.strftime("%Y-%m-%d %H:%M:%S")}, which is {seconds_to_next_run} seconds from now.')
     time.sleep(seconds_to_next_run)
 
-print("Done!")
