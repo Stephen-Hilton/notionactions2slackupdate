@@ -13,6 +13,7 @@ standard_headers = {"Notion-Version": "2022-06-28"
                    ,"content-type": "application/json"
                    ,"Authorization": f"Bearer {notion_api_key}"}
 config = json.load(open('config.json'))
+logging.info(f'json content: \n{str(config)}')
 
 
 def get_result(results_json, parent_list=[]):
@@ -60,8 +61,11 @@ def get_actions(userid, max_items=10) -> json:
                 "sorts": [ { "property": "Priority", "direction": "ascending" },
                            { "property": "Due Date", "direction": "ascending" } ] }
     resp = requests.post(url=url, headers=standard_headers, json=data_json)
-    if resp.status_code == 200:
-        msgs = []
+    msgs = []
+    if resp.status_code != 200:
+        logging.error(f"Error: {resp} " )
+    else:
+        
         i=0
         for action in resp.json()['results']:
             action_title = get_result(action, ['properties','Short Description','title',0,'plain_text'])
