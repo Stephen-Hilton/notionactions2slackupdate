@@ -1,9 +1,10 @@
-import requests, os, json, certifi, ssl, time, datetime, logging
+import requests, os, json, certifi, ssl, time, datetime, pytz, logging
 from dotenv import load_dotenv
+from pytz import timezone
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-logging.basicConfig(filename='./notion2slack.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='./notion2slack.log', encoding='utf-8', level=logging.INFO)
 logging.info("Loading variables and configs")
 
 load_dotenv()
@@ -143,7 +144,8 @@ while True:
     # Process once per user
     for user in config['users']:    
         logging.info(f"Generating { user['name'] }")
-        now = datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')
+        now_utc = datetime.datetime.now(tz=pytz.utc)
+        now = datetime.datetime.strftime( now_utc.astimezone(pytz.timezone('US/Pacific')) , '%Y-%m-%d %H:%M:%S')
         user['actions'] = get_actions( user['notionid'], int(user['items']) )
         actions = [a for a in user['actions'] ]
         actions.insert(0,f'----------------------------------------------------------')
@@ -153,8 +155,9 @@ while True:
         slack(user['slackid'], actions)
 
     # sleep until 5am
-    now = datetime.datetime.now()
-    next_runtime = datetime.datetime(year=now.year, month=now.month, day=now.day, hour=5, minute=0, second=0) + datetime.timedelta(days=1)
+    now_utc = datetime.datetime.now(tz=pytz.utc)
+    now = now_utc.astimezone(pytz.timezone('US/Pacific'))
+    next_runtime = datetime.datetime(year=now.year, month=now.month, day=now.day, hour=5, minute=0, second=0, tzinfo=now.tzinfo) + datetime.timedelta(days=1)
     seconds_to_next_run = int((next_runtime - now).total_seconds())
     logging.info(f'Complete, sleeping until {next_runtime.strftime("%Y-%m-%d %H:%M:%S")}, which is {seconds_to_next_run} seconds from now.')
     time.sleep(seconds_to_next_run)
