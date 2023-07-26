@@ -1,0 +1,14 @@
+{"notion databases": 
+    {
+        "Actions": "123456789asbcdef123456789asbcdef",
+        "Accounts": "123456789asbcdef123456789asbcdef",
+        "People": "123456789asbcdef123456789asbcdef",
+        "Meetings": "123456789asbcdef123456789asbcdef",
+        "Feature Requests": "123456789asbcdef123456789asbcdef"
+    }
+ ,"users":
+    [
+          {"name":"Jack", "items":"10", "notionid":"1234567-89ab-cdef-1234-56789asbcdef", "slackid":"123qrstuv789", "email":"someone@example.com"}
+         ,{"name":"Jill",  "items":"5", "notionid":"1234567-89ab-cdef-1234-56789asbcdef", "slackid":"123qrstuv789", "email":"someone.else@example.com"}
+    ]
+}
